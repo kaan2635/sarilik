@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yenidoğan Sarılık ve Fototerapi Hesaplayıcı</title>
+<meta name="description" content="Türk Neonatoloji Derneği 2023 güncel rehberine göre yenidoğan sarılığında fototerapi ve kan değişimi eşiklerini hesaplayan karar destek aracı.">
+<style>
+:root{
+  --bg:#f4f6f9; --card:#ffffff; --fg:#1b2430; --muted:#5b6675; --line:#d8dee7;
+  --accent:#1d4ed8; --ok:#15803d; --okbg:#e8f6ec; --warn:#b45309; --warnbg:#fff4e0;
+  --bad:#b91c1c; --badbg:#fde8e8; --info:#1d4ed8; --infobg:#e8effd; --crit:#7f1d1d; --critbg:#fbd5d5;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0f141b; --card:#18202b; --fg:#e7ecf3; --muted:#9aa6b6; --line:#2b3544;
+    --accent:#6ea0ff; --ok:#6fd08c; --okbg:#15301f; --warn:#f0b35a; --warnbg:#3a2a10;
+    --bad:#ff8a8a; --badbg:#3b1717; --info:#8db4ff; --infobg:#16253f; --crit:#ffb3b3; --critbg:#4a1414;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:16px}
+header h1{font-size:1.45rem;margin:4px 0 2px}
+header p{margin:0;color:var(--muted);font-size:.93rem}
+.disclaimer{background:var(--warnbg);color:var(--warn);border:1px solid var(--warn);border-radius:10px;padding:10px 12px;margin:14px 0;font-size:.9rem}
+.grid{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:860px){ .grid{grid-template-columns:minmax(0,400px) minmax(0,1fr);align-items:start} .sticky{position:sticky;top:12px} }
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+.card h2{font-size:1.02rem;margin:0 0 10px}
+label{display:block;font-size:.88rem;color:var(--muted);margin:10px 0 3px}
+input[type=number],input[type=datetime-local],select{width:100%;padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--fg);font:inherit;min-height:44px}
+input:focus,select:focus,summary:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:7px 0;font-size:.95rem;color:var(--fg);margin:0}
+.chk input{margin-top:4px;width:18px;height:18px;flex:none}
+.hint{font-size:.82rem;color:var(--muted);margin-top:4px}
+button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:9px 14px;border-radius:9px;cursor:pointer;min-height:44px}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+details{margin-top:6px}
+summary{cursor:pointer;color:var(--accent);padding:8px 0}
+.banner{border-radius:12px;padding:14px 16px;margin-bottom:12px;border:1px solid}
+.banner h3{margin:0 0 4px;font-size:1.15rem}
+.banner p{margin:0}
+.l0{background:var(--okbg);color:var(--ok);border-color:var(--ok)}
+.l1{background:var(--warnbg);color:var(--warn);border-color:var(--warn)}
+.l2{background:var(--badbg);color:var(--bad);border-color:var(--bad)}
+.l3{background:var(--critbg);color:var(--crit);border-color:var(--crit)}
+.li{background:var(--infobg);color:var(--info);border-color:var(--info)}
+.metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+@media (min-width:560px){.metrics{grid-template-columns:repeat(3,1fr)}}
+.metric{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.metric b{display:block;font-size:1.15rem}
+.metric span{font-size:.78rem;color:var(--muted)}
+ul.rec{margin:6px 0 4px;padding-left:20px}
+ul.rec li{margin:5px 0}
+.sec{margin:14px 0 4px;font-size:.95rem;font-weight:600}
+.note{font-size:.88rem;color:var(--muted)}
+.warnli{color:var(--warn)}
+.badli{color:var(--bad)}
+svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin-top:4px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.placeholder{color:var(--muted);text-align:center;padding:26px 8px}
+footer{font-size:.82rem;color:var(--muted);padding:6px 2px 30px}
+footer ol{padding-left:18px}
+.gp{border-radius:12px;padding:12px 14px;margin:0 0 12px;border:2px solid;background:var(--card)}
+.gp b.t{display:block;font-size:.8rem;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+.gp p{margin:0;font-size:1.02rem}
+.gp.l0{border-color:var(--ok)} .gp.l1{border-color:var(--warn)} .gp.l2{border-color:var(--bad)} .gp.l3{border-color:var(--crit)}
+.steps{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0;padding:0;list-style:none;font-size:.88rem;color:var(--muted)}
+.steps li{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px 12px}
+.steps b{color:var(--accent)}
+details.tech{border:1px solid var(--line);border-radius:10px;padding:2px 12px;margin:10px 0;background:var(--bg)}
+details.tech summary{font-size:.92rem}
+.mini{font-size:.82rem;color:var(--muted);margin:2px 0 0}
+@media print{ .noprint{display:none!important} body{background:#fff;color:#000} .card{border:1px solid #999} }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Yenidoğan Sarılık ve Fototerapi Hesaplayıcı</h1>
+  <p>Esas alınan rehber: Türk Neonatoloji Derneği, <em>Yenidoğan Sarılıklarında Yaklaşım, İzlem ve Tedavi Rehberi</em> – 2023 Güncellemesi (TND'nin yayımladığı en güncel sürüm)</p>
+  <ul class="steps noprint">
+    <li><b>1</b> Bebek ve zamanları girin</li>
+    <li><b>2</b> Bilirubini girin</li>
+    <li><b>3</b> Kan gruplarını girin</li>
+    <li><b>4</b> Sonucu ve yönlendirmeyi okuyun</li>
+  </ul>
+</header>
+
+<div class="disclaimer">
+  <b>Önemli:</b> Bu araç eğitim ve karar desteği amaçlıdır; tıbbi cihaz değildir ve klinik muayenenin yerini tutmaz.
+  Tedavi kararı sorumlu hekime aittir. Girilen veriler yalnızca tarayıcınızda işlenir, hiçbir yere gönderilmez veya kaydedilmez.
+</div>
+
+<div class="grid">
+<!-- ============== GİRİŞ ============== -->
+<div class="noprint">
+  <form id="f" autocomplete="off" onsubmit="return false">
+    <div class="card">
+      <h2>1. Bebek ve zaman bilgileri</h2>
+      <label for="ga">Gebelik haftası (doğumdaki tamamlanmış hafta)</label>
+      <input id="ga" type="number" inputmode="numeric" min="23" max="42" step="1" placeholder="örn. 38">
+      <label for="birth">Doğum tarihi ve saati</label>
+      <input id="birth" type="datetime-local">
+      <label for="sample">Kan alınan saat (bilirubinin ölçüldüğü tarih ve saat)</label>
+      <input id="sample" type="datetime-local">
+      <div class="btns"><button type="button" id="btnNow">Kan alma saati = şimdi</button></div>
+      <p class="mini">Bebeğin yaşı (saat olarak) bu iki zamandan otomatik hesaplanır.</p>
+    </div>
+
+    <div class="card">
+      <h2>2. Bilirubin düzeyi</h2>
+      <div class="row3">
+        <div><label for="tsb">Bilirubin</label><input id="tsb" type="number" inputmode="decimal" min="0" step="0.1" placeholder="örn. 14.5"></div>
+        <div><label for="unit">Birim</label><select id="unit"><option value="mg">mg/dL</option><option value="umol">µmol/L</option></select></div>
+        <div><label for="type">Yöntem</label><select id="type"><option value="TSB">TSB (serum)</option><option value="TcB">TcB (transkutan)</option></select></div>
+      </div>
+      <label class="chk"><input type="checkbox" id="onPT"> Bebek şu an fototerapi alıyor</label>
+    </div>
+
+    <div class="card">
+      <h2>3. Kan grupları ve Coombs</h2>
+      <div class="row">
+        <div><label for="mABO">Anne ABO</label><select id="mABO"><option value="">Bilinmiyor</option><option>A</option><option>B</option><option>AB</option><option>O</option></select></div>
+        <div><label for="mRh">Anne Rh (D)</label><select id="mRh"><option value="">Bilinmiyor</option><option value="+">Pozitif (+)</option><option value="-">Negatif (−)</option></select></div>
+        <div><label for="bABO">Bebek ABO</label><select id="bABO"><option value="">Bilinmiyor</option><option>A</option><option>B</option><option>AB</option><option>O</option></select></div>
+        <div><label for="bRh">Bebek Rh (D)</label><select id="bRh"><option value="">Bilinmiyor</option><option value="+">Pozitif (+)</option><option value="-">Negatif (−)</option></select></div>
+      </div>
+      <label for="dct">Direkt Coombs testi (bebek / kordon)</label>
+      <select id="dct"><option value="unk">Bakılmadı / bilinmiyor</option><option value="neg">Negatif</option><option value="pos">Pozitif</option></select>
+    </div>
+
+    <div class="card">
+      <h2>4. Bebekte şunlardan biri var mı?</h2>
+      <div id="risk35">
+        <div class="hint">Hiçbiri yoksa boş bırakın. Biri varsa tedavi eşiği daha düşük kabul edilir. Asfiksi, belirgin letarji, ısı instabilitesi, asidoz ve sepsis, rehberdeki "son 24 saatte klinik kötüleşme / sepsis" risk faktörü kapsamındadır.</div>
+        <label class="chk"><input type="checkbox" id="r_isoimmune"> Kan uyuşmazlığına bağlı hemoliz (izoimmün hemolitik hastalık)</label>
+        <label class="chk"><input type="checkbox" id="r_g6pd"> G6PD eksikliği</label>
+        <label class="chk"><input type="checkbox" id="r_asphyxia"> Doğumda asfiksi</label>
+        <label class="chk"><input type="checkbox" id="r_lethargy"> Belirgin uykuya meyil / emmeme (letarji)</label>
+        <label class="chk"><input type="checkbox" id="r_temp"> Vücut ısısını koruyamama</label>
+        <label class="chk"><input type="checkbox" id="r_acidosis"> Asidoz</label>
+        <label class="chk"><input type="checkbox" id="r_sepsis"> Sepsis / ciddi enfeksiyon</label>
+        <label class="chk"><input type="checkbox" id="r_unassessed"> Emin değilim, değerlendiremedim (güvenli tarafta kal)</label>
+        <div class="hint">Direkt Coombs pozitifliği ve albümin &lt;3 g/dL, ilgili alanlara girildiğinde otomatik dikkate alınır.</div>
+      </div>
+      <div id="riskPre" hidden>
+        <div class="hint">Gebelik &lt;35 hafta (TND rehberi / Maisels 2012 risk faktörleri):</div>
+        <label class="chk"><input type="checkbox" id="r_hemo"> Hemolizi düşündüren hızlı bilirubin artışı</label>
+        <label class="chk"><input type="checkbox" id="r_ph"> Kan pH &lt;7,15</label>
+        <label class="chk"><input type="checkbox" id="r_cult"> Son 24 saatte kan kültürü pozitifliği</label>
+        <label class="chk"><input type="checkbox" id="r_apnea"> Son 24 saatte müdahale gerektiren apne/bradikardi</label>
+        <label class="chk"><input type="checkbox" id="r_hypot"> Son 24 saatte inotrop gerektiren hipotansiyon</label>
+        <label class="chk"><input type="checkbox" id="r_vent"> Kan alınırken mekanik ventilasyonda</label>
+        <div class="hint">Albümin &lt;2,5 g/dL aşağıdaki alandan otomatik dikkate alınır.</div>
+      </div>
+      <details>
+        <summary>İsteğe bağlı ek veriler (albümin, önceki ölçüm, kordon)</summary>
+        <label for="alb">Serum albümin (g/dL)</label>
+        <input id="alb" type="number" inputmode="decimal" step="0.1" min="0" placeholder="örn. 3.2">
+        <label for="prevTsb">Önceki bilirubin (mg/dL)</label>
+        <input id="prevTsb" type="number" inputmode="decimal" step="0.1" min="0">
+        <label for="prevTime">Önceki bilirubinin alındığı zaman</label>
+        <input id="prevTime" type="datetime-local">
+        <div class="hint">İki ölçüm girilirse saatlik artış hızı hesaplanır (&gt;0,2 mg/dL/saat hemoliz göstergesi; &gt;0,5 mg/dL/saat yoğun fototerapi).</div>
+        <div class="row">
+          <div><label for="cordHb">Kordon Hb (g/dL)</label><input id="cordHb" type="number" inputmode="decimal" step="0.1" min="0"></div>
+          <div><label for="cordTsb">Kordon bilirubin (mg/dL)</label><input id="cordTsb" type="number" inputmode="decimal" step="0.1" min="0"></div>
+        </div>
+      </details>
+      <div class="btns"><button type="button" id="btnExample">Örnek vaka yükle</button><button type="button" id="btnReset">Formu temizle</button></div>
+    </div>
+  </form>
+</div>
+
+<!-- ============== SONUÇ ============== -->
+<div class="sticky">
+  <div class="card" id="outCard" aria-live="polite">
+    <h2>Sonuç</h2>
+    <div id="out"><div class="placeholder">Gebelik haftası, doğum ve ölçüm zamanını ve bilirubin değerini girin; sonuç otomatik görünür.</div></div>
+    <div class="btns noprint" id="outBtns" hidden>
+      <button type="button" id="btnCopy" class="primary">Özeti kopyala</button>
+      <button type="button" id="btnPrint">Yazdır</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<footer>
+  <p><b>Kaynaklar ve yöntem.</b> Sürüm 1.0 – Ekim 2026.</p>
+  <ol>
+    <li>Türk Neonatoloji Derneği. Yenidoğan Sarılıklarında Yaklaşım, İzlem ve Tedavi Rehberi, 2023 Güncellemesi (Çoban A, Kaynak Türkmen M, Gürsoy T, editörler); neonatology.org.tr › Tanı ve Tedavi Rehberleri. Tablo ve bölüm atıfları (Tablo 5, 7, 8, 12; bölüm C3, C4, D1, D2) 2022 baskısındaki numaralandırmaya göredir; 2023 baskısında numaralar kayabilir.</li>
+    <li>≥35 hafta eğrileri (TND rehberindeki fototerapi ve kan değişimi şekilleri) AAP 2004 eğrilerine dayanır (Pediatrics 2004;114:297). Eğriler görsel olarak verildiğinden eşikler 24, 48, 72, 96 ve 120. saat referans noktaları arasında doğrusal ara değerleme ile hesaplanmıştır; okuma farkı ±0,5 mg/dL olabilir. Klinik kararda orijinal eğriyi doğrulayın.</li>
+    <li>&lt;35 hafta: TND Tablo 5 (NICE CG98'den uyarlama; 72 saatten sonra fototerapi eşiği = gebelik haftası × 0,6 − 6). Risk faktörü varlığında TND rehberindeki &lt;35 hafta şeklinin kaynağı olan Maisels ve ark., J Perinatol 2012;32:660 aralıklarının alt değeri de dikkate alınır.</li>
+    <li>Bu sürüm TND 2023 güncellemesini uygular (TND'nin sitesinde Ekim 2026 itibarıyla listelenen en yeni sarılık rehberi). TND rehberinde ≥35 hafta eşikleri AAP 2004 eğrilerine dayanır; AAP 2022 (Kemper ve ark.) eşikleri daha yüksektir ve bu araçta kullanılmamıştır. TND daha yeni bir sürüm yayımlarsa eşik tablolarını güncelleyin.</li>
+  </ol>
+</footer>
+</div>
+
+<!-- ======================= ÇEKİRDEK HESAPLAMA ======================= -->
+<script id="core">
+(function (root) {
+  'use strict';
+
+  /* ≥35 hafta: AAP 2004 eğrilerinden (TND rehberi ≥35 hafta şekilleri) okunan referans noktalar, mg/dL */
+  var ANCH = [24, 48, 72, 96, 120];
+  var PT = { low: [12, 15, 18, 20, 21], med: [10, 13, 15, 17, 18], high: [8, 11, 13.5, 14.5, 15] };
+  var EX = { low: [19, 22, 24, 25, 25], med: [16.5, 19, 21, 22.5, 22.5], high: [15, 17, 18.5, 19, 19] };
+  var CAT = {
+    low:  'Düşük risk eğrisi (≥38 hafta, risk faktörü yok)',
+    med:  'Orta risk eğrisi (≥38 hafta + risk faktörü  veya  35–37 hafta, risk faktörü yok)',
+    high: 'Yüksek risk eğrisi (35–37 hafta + risk faktörü)'
+  };
+  /* <35 hafta: TND Tablo 5 → [24 saat, 48 saat, 72 saat] × [fototerapi, kan değişimi] */
+  var T5 = {
+    23: [[4, 8], [6, 10], [8, 13]], 24: [[4, 8], [6, 11], [8, 14]], 25: [[4, 8], [6, 11], [9, 15]],
+    26: [[5, 8], [7, 12], [9, 15]], 27: [[5, 8], [7, 12], [10, 16]], 28: [[5, 9], [7, 12], [10, 16]],
+    29: [[5, 9], [8, 13], [11, 17]], 30: [[6, 9], [9, 13], [11, 17]], 31: [[6, 9], [9, 13], [12, 18]],
+    32: [[6, 9], [9, 14], [13, 19]], 33: [[6, 9], [9, 15], [13, 19]], 34: [[6, 10], [10, 15], [14, 20]]
+  };
+  /* TND Tablo 12: ilk 24 saatte kan değişimi sınırları (6., 12., 18. saat) */
+  function t12(ga) {
+    if (ga >= 38) return [9, 12, 15];
+    if (ga >= 34) return [8.5, 11.5, 13.5];
+    if (ga >= 29) return [6.5, 9.5, 12.5];
+    return [5, 6, 7];
+  }
+  /* Maisels 2012 (<35 hafta), [alt, üst] */
+  function maisels(ga) {
+    if (ga < 28)  return { pt: [5, 6],   ex: [11, 14] };
+    if (ga < 30)  return { pt: [6, 8],   ex: [12, 14] };
+    if (ga < 32)  return { pt: [8, 10],  ex: [13, 16] };
+    if (ga < 34)  return { pt: [10, 12], ex: [15, 18] };
+    return { pt: [12, 14], ex: [17, 19] };
+  }
+  /* TND Tablo 8 – B/A oranı (mg/g), kan değişimi destek kriteri */
+  function baRef(ga, risk) {
+    if (ga >= 38) return risk ? 7.2 : 8;
+    return risk ? 6.8 : 7.2;
+  }
+
+  function lerp(x, x0, x1, y0, y1) { return y0 + (y1 - y0) * (x - x0) / (x1 - x0); }
+  function interpAnch(arr, h) {
+    if (h <= ANCH[0]) return arr[0];
+    if (h >= ANCH[ANCH.length - 1]) return arr[arr.length - 1];
+    for (var i = 0; i < ANCH.length - 1; i++) {
+      if (h >= ANCH[i] && h <= ANCH[i + 1]) return lerp(h, ANCH[i], ANCH[i + 1], arr[i], arr[i + 1]);
+    }
+    return arr[arr.length - 1];
+  }
+  function pretermThr(ga, h) {
+    var r = T5[ga];
+    if (h <= 24) return { pt: r[0][0], ex: r[0][1] };
+    if (h <= 72) {
+      var s = h <= 48 ? 0 : 1, h0 = 24 + 24 * s;
+      return {
+        pt: lerp(h, h0, h0 + 24, r[s][0], r[s + 1][0]),
+        ex: lerp(h, h0, h0 + 24, r[s][1], r[s + 1][1])
+      };
+    }
+    return { pt: ga * 0.6 - 6, ex: r[2][1] };
+  }
+  function exFirst24(ga, age) {
+    if (age < 6) return null;
+    var v = t12(ga);
+    if (age < 12) return lerp(age, 6, 12, v[0], v[1]);
+    if (age < 18) return lerp(age, 12, 18, v[1], v[2]);
+    return v[2];
+  }
+  function abIncompat(m, b) {
+    if (!m || !b) return null;
+    if (m === 'O') return b !== 'O';
+    if (m === 'A') return b === 'B' || b === 'AB';
+    if (m === 'B') return b === 'A' || b === 'AB';
+    return false; /* anne AB */
+  }
+  function f1(x) {
+    return (Math.round(x * 10) / 10).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
+  }
+  function hoursToText(h) {
+    var d = Math.floor(h / 24), r = Math.round((h - d * 24) * 10) / 10;
+    return d > 0 ? d + ' gün ' + f1(r) + ' saat' : f1(r) + ' saat';
+  }
+  function monitorText(tsb, level) {
+    if (level === 3) return 'Kan değişimi sınırında/üzerinde: yoğun fototerapi ile 2–3 saatte bir TSB (TND C4a).';
+    if (tsb >= 20) return 'TSB 20–25 mg/dL: 3–4 saatte bir TSB tekrarı (TND Tablo 7).';
+    return 'TSB <20 mg/dL: 4–6 saatte bir TSB tekrarı; düşüş varsa 8–12 saatte bir (TND Tablo 7).';
+  }
+
+  function evaluate(i) {
+    var missing = [], errors = [];
+    var ga = Number(i.ga);
+    if (i.ga === '' || i.ga == null || !isFinite(ga)) missing.push('gebelik haftası');
+    else if (ga < 23 || ga > 42 || Math.floor(ga) !== ga) errors.push('Gebelik haftası 23–42 arasında tam sayı olmalı.');
+    if (!i.birth) missing.push('doğum zamanı');
+    if (!i.sample) missing.push('ölçüm zamanı');
+    var raw = Number(i.tsb);
+    if (i.tsb === '' || i.tsb == null || !isFinite(raw)) missing.push('bilirubin değeri');
+    else if (raw <= 0) errors.push('Bilirubin değeri 0’dan büyük olmalı.');
+    if (missing.length || errors.length) return { ready: false, missing: missing, errors: errors };
+
+    var tsb = i.unit === 'umol' ? raw / 17.1 : raw;
+    var ageH = (i.sample.getTime() - i.birth.getTime()) / 36e5;
+    if (!(ageH >= 0)) return { ready: false, missing: [], errors: ['Ölçüm zamanı doğum zamanından önce olamaz.'] };
+    if (tsb > 60) return { ready: false, missing: [], errors: ['Bilirubin değeri çok yüksek görünüyor (>60 mg/dL); birimi kontrol edin.'] };
+
+    var res = { ready: true, ga: ga, ageH: ageH, tsb: tsb, bullets: [], notes: [], blood: [], warns: [] };
+    var term35 = ga >= 35;
+    res.group = term35 ? 'ge35' : 'lt35';
+
+    /* ---- kan grubu değerlendirmesi ---- */
+    var ab = abIncompat(i.mABO, i.bABO);
+    var rhInc = (i.mRh && i.bRh) ? (i.mRh === '-' && i.bRh === '+') : null;
+    var mTxt = (i.mABO || '?') + ' Rh' + (i.mRh === '+' ? '(+)' : i.mRh === '-' ? '(−)' : '(?)');
+    var bTxt = (i.bABO || '?') + ' Rh' + (i.bRh === '+' ? '(+)' : i.bRh === '-' ? '(−)' : '(?)');
+    res.blood.push('Anne: ' + mTxt + ' · Bebek: ' + bTxt);
+    if (ab === true) res.blood.push('ABO uyuşmazlığı var (anne ' + i.mABO + ', bebek ' + i.bABO + ').');
+    else if (ab === false) res.blood.push('ABO uyuşmazlığı yok.');
+    if (rhInc === true) res.blood.push('Rh uyuşmazlığı var (anne Rh negatif, bebek Rh pozitif).');
+    else if (rhInc === false) res.blood.push('Rh uyuşmazlığı yok.');
+    var needCord = (i.mABO === 'O') || (i.mRh === '-') || !i.mABO || !i.mRh;
+    if (needCord) res.blood.push('Anne kan grubu O, Rh negatif veya bilinmiyor: kordon kanında direkt Coombs, ABO ve Rh (D) bakılmalıdır (TND B2a).');
+    var incompat = (ab === true) || (rhInc === true);
+    if (incompat && i.dct === 'unk') res.blood.push('Uyuşmazlık var ancak direkt Coombs sonucu yok: Coombs testi, tam kan sayımı, periferik yayma, retikülosit ve G6PD değerlendirin.');
+    if (incompat && i.dct === 'neg') res.blood.push('Coombs negatif; yine de hızlı bilirubin artışı (>0,2 mg/dL/saat) hemoliz açısından değerlendirilmelidir (TND C2).');
+    if (i.dct === 'pos') res.blood.push('Direkt Coombs pozitif: izoimmün hemoliz kabul edilir, bir alt (riskli) eğri kullanılır.');
+    var hemoSuspect = (i.dct === 'pos') || incompat;
+
+    /* ---- artış hızı ---- */
+    var rate = null;
+    if (i.prevTime && i.prevTsb !== '' && i.prevTsb != null && isFinite(Number(i.prevTsb))) {
+      var dh = (i.sample.getTime() - i.prevTime.getTime()) / 36e5;
+      if (dh >= 0.5) rate = (tsb - Number(i.prevTsb)) / dh;
+      else res.notes.push('Önceki ölçüm ile ölçüm zamanı arasında en az 30 dakika olmalı; artış hızı hesaplanmadı.');
+    }
+    res.rate = rate;
+    var rateHigh = rate != null && rate > 0.5;
+    var rateHemo = rate != null && rate > 0.2;
+
+    /* ---- risk faktörleri ---- */
+    var R = i.risks || {}, risks = [];
+    var alb = (i.alb !== '' && i.alb != null && isFinite(Number(i.alb))) ? Number(i.alb) : null;
+    if (term35) {
+      if (R.isoimmune) risks.push('İzoimmün hemolitik hastalık');
+      if (i.dct === 'pos' && !R.isoimmune) risks.push('Direkt Coombs pozitif');
+      if (R.g6pd) risks.push('G6PD eksikliği');
+      if (R.asphyxia) risks.push('Asfiksi');
+      if (R.lethargy) risks.push('Belirgin letarji');
+      if (R.temp) risks.push('Isı instabilitesi');
+      if (R.acidosis) risks.push('Asidoz');
+      if (R.sepsis) risks.push('Sepsis');
+      if (alb != null && alb < 3) risks.push('Albümin <3 g/dL');
+      if (R.unassessed) risks.push('Risk faktörleri dışlanamadı');
+    } else {
+      if (alb != null && alb < 2.5) risks.push('Albümin <2,5 g/dL');
+      if (R.hemo || i.dct === 'pos' || rateHemo) risks.push('Hemoliz bulgusu / hızlı artış');
+      if (R.ph) risks.push('Kan pH <7,15');
+      if (R.cult) risks.push('Pozitif kan kültürü (24 saat)');
+      if (R.apnea) risks.push('Apne/bradikardi (24 saat)');
+      if (R.hypot) risks.push('İnotrop gerektiren hipotansiyon (24 saat)');
+      if (R.vent) risks.push('Mekanik ventilasyon');
+    }
+    res.risks = risks;
+    var risk = risks.length > 0;
+
+    /* ---- eşikler ---- */
+    var ptThr = null, exThr = null, source = '', catLabel = '', chart = { pt: [], ex: [] };
+    var exFirst = null;
+    if (term35) {
+      var key = ga >= 38 ? (risk ? 'med' : 'low') : (risk ? 'high' : 'med');
+      res.catKey = key;
+      catLabel = CAT[key];
+      source = 'TND rehberi ≥35 hafta fototerapi ve kan değişimi eğrileri (AAP 2004 tabanlı)';
+      var hs = [24, 36, 48, 60, 72, 84, 96, 108, 120, 168];
+      hs.forEach(function (h) {
+        chart.pt.push([h, interpAnch(PT[key], h)]);
+        chart.ex.push([h, interpAnch(EX[key], h)]);
+      });
+      if (ageH >= 24) { ptThr = interpAnch(PT[key], ageH); exThr = interpAnch(EX[key], ageH); }
+      /* Coombs bilinmiyor senaryosu */
+      if (!risk && incompat && i.dct === 'unk' && ageH >= 24) {
+        var k2 = ga >= 38 ? 'med' : 'high';
+        res.altScenario = { label: 'Coombs pozitif çıkarsa (' + (k2 === 'med' ? 'orta' : 'yüksek') + ' risk eğrisi)', pt: interpAnch(PT[k2], ageH), ex: interpAnch(EX[k2], ageH) };
+      }
+    } else {
+      catLabel = 'Gebelik <35 hafta: TND Tablo 5' + (ageH > 72 ? ' (72 saat sonrası: fototerapi = hafta × 0,6 − 6)' : '');
+      source = 'TND Tablo 5 (NICE’tan uyarlama)';
+      res.catKey = 'pre';
+      [[24, 0], [48, 1], [72, 2]].forEach(function (a) { chart.pt.push([a[0], T5[ga][a[1]][0]]); chart.ex.push([a[0], T5[ga][a[1]][1]]); });
+      var after = ga * 0.6 - 6;
+      chart.pt.push([72, after]); chart.pt.push([168, after]);
+      chart.ex.push([168, T5[ga][2][1]]);
+      if (ageH >= 24) {
+        var t = pretermThr(ga, ageH);
+        ptThr = t.pt; exThr = t.ex;
+        if (ageH > 72) res.notes.push('72 saatten sonra TND kan değişimi için ayrı bir formül vermez; Tablo 5’teki 72. saat değeri esas alınmıştır.');
+        var m = maisels(ga);
+        var mPt = risk ? m.pt[0] : m.pt[1], mEx = risk ? m.ex[0] : m.ex[1];
+        res.maisels = { pt: m.pt, ex: m.ex, usedPt: mPt, usedEx: mEx };
+        if (risk) {
+          if (mPt < ptThr) { ptThr = mPt; source += ' + risk faktörü: Maisels 2012 alt değeri'; }
+          if (mEx < exThr) { exThr = mEx; }
+        }
+      }
+    }
+    if (ageH < 24) exFirst = exFirst24(ga, ageH);
+    res.ptThr = ptThr; res.exThr = exFirst != null ? exFirst : exThr;
+    res.catLabel = catLabel; res.source = source; res.chart = chart;
+    res.exFirst = exFirst;
+
+    /* ---- seviye ---- */
+    var level, exLim = exFirst != null ? exFirst : exThr;
+    if (ageH < 24) level = 1;
+    else level = tsb >= ptThr ? 1 : 0;
+    if (exLim != null) {
+      if (tsb >= exLim) level = 3;
+      else if (tsb >= exLim - 3 && level >= 1) level = 2;
+      else if (tsb >= exLim - 3 && ageH < 24) level = 2;
+    }
+    var intensive = level >= 2 || (level >= 1 && rateHigh);
+    res.level = level; res.intensive = intensive;
+
+    /* ---- pratisyen hekim için tek cümlelik yönlendirme ---- */
+    var unitTxt = term35 ? 'fototerapi yapılabilen yenidoğan ünitesi' : 'yenidoğan yoğun bakım ünitesi';
+    var gp;
+    if (level === 3) {
+      gp = { t: 'ACİL SEVK', x: 'Kan değişimi sınırında veya üzerinde. Bekletmeden, kan değişimi yapılabilen yenidoğan yoğun bakım merkezine ambulansla sevk edin. Mümkünse sevk öncesi ve sırasında yoğun fototerapiyi başlatıp sürdürün, emzirmeyi/hidrasyonu aksatmayın.' };
+    } else if (level === 2) {
+      gp = { t: 'ACİL SEVK', x: 'Kan değişimi sınırına 3 mg/dL veya daha az kaldı. Yoğun fototerapi gerekir: bebeği hemen yoğun fototerapi ve kan değişimi hazırlığı yapabilen yenidoğan merkezine yönlendirin.' };
+    } else if (ageH < 24) {
+      gp = { t: 'Sevk / yatış', x: 'İlk 24 saatte görülen sarılık patolojik kabul edilir. Bebeği ' + unitTxt + ' olan merkeze yönlendirin; kan grupları, Coombs ve hemoliz tetkikleri istenmelidir.' };
+    } else if (level === 1) {
+      gp = { t: 'Fototerapi gerekli', x: 'Bilirubin fototerapi eşiğini aşıyor. Bebeği ' + unitTxt + ' olan merkeze yatış/sevk için yönlendirin' + (rateHigh ? ' (artış hızı yüksek: gecikmeden)' : '') + '. Sevk edilene kadar sık emzirmeye devam edin.' };
+    } else {
+      gp = { t: 'Şimdilik fototerapi gerekmiyor', x: 'Bebeğin yaşına ve bilirubin düzeyine göre 4–24 saat içinde bilirubini tekrarlayın (eşiğe ne kadar yakınsa aralık o kadar kısa tutulur). Ailenin yeterli emzirmesini (günde en az 8–12 kez) ve sarılık artarsa/bebek emmez veya uykulu olursa hemen başvurmasını anlatın.' };
+    }
+    res.gp = gp;
+
+    var tcb = i.type === 'TcB';
+    var B = res.bullets, N = res.notes, W = res.warns;
+
+    /* ---- başlık ---- */
+    if (ageH < 24 && level < 3) {
+      res.headline = level === 2 ? 'İlk 24 saatte sarılık – kan değişimi sınırına ≤3 mg/dL' : 'İlk 24 saatte sarılık: patolojik kabul edilir';
+      res.sub = 'TND D2: TSB alınır ve fototerapi başlanır; hemoliz ve diğer nedenler araştırılır.';
+    } else if (level === 0) {
+      res.headline = 'Fototerapi eşiğinin altında';
+      res.sub = 'Eşiğe ' + f1(ptThr - tsb) + ' mg/dL var.';
+    } else if (level === 1) {
+      res.headline = intensive ? 'Fototerapi endikasyonu – yoğun fototerapi önerilir' : 'Fototerapi endikasyonu var';
+      res.sub = intensive ? 'Bilirubin artış hızı >0,5 mg/dL/saat.' : 'TSB fototerapi eşiğini ' + f1(tsb - ptThr) + ' mg/dL aşıyor.';
+    } else if (level === 2) {
+      res.headline = 'Yoğun fototerapi – kan değişimi sınırına ≤3 mg/dL';
+      res.sub = 'Kan değişimi sınırına ' + f1(exLim - tsb) + ' mg/dL kaldı.';
+    } else {
+      res.headline = 'Kan değişimi sınırında / üzerinde – ACİL';
+      res.sub = 'TSB kan değişimi sınırını ' + f1(tsb - exLim) + ' mg/dL aşıyor.';
+    }
+
+    /* ---- öneriler ---- */
+    if (ageH < 24) {
+      B.push('İlk 24 saatte ortaya çıkan sarılık her zaman patolojiktir: TSB bakın, fototerapi başlayın (TND D2).');
+      B.push('Hemoliz araştırması: kan grupları, direkt Coombs, tam kan sayımı, periferik yayma, retikülosit, G6PD.');
+      if (exFirst != null) B.push('İlk 24 saat kan değişimi sınırı (TND ' + (ga >= 38 ? 'D2a' : 'Tablo 12') + ') bu saat için yaklaşık ' + f1(exFirst) + ' mg/dL.');
+      else B.push('Doğumdan sonraki ilk 6 saatte ≥38 haftalık bebekte kordon bilirubini >5 mg/dL ise kan değişimi hazırlığı yapılırken yoğun fototerapi başlanır.');
+      B.push('Yoğun fototerapiye rağmen bilirubin >0,5 mg/dL/saat artıyorsa kan değişimi yapılır; <0,5 ise yoğun fototerapi sürdürülür (TND D2).');
+    }
+    if (level === 0 && ageH >= 24) {
+      B.push('Bebeğin yaşına ve TSB düzeyine göre 4–24 saat içinde bilirubini tekrarlayın (TND Tablo 3).');
+      if (tsb >= ptThr - 2) B.push('Eşiğe 2 mg/dL’den az kaldı: yakın izlem; klinik değerlendirme ve kısa aralıklı ölçüm düşünün.');
+      B.push('Yeterli emzirme (günde en az 8–12 kez), tartı kaybı ve idrar/gaita izlemi; su veya şekerli su verilmez (TND B1).');
+      if (rateHigh) B.push('Bilirubin artış hızı >0,5 mg/dL/saat: kısa aralıkla TSB tekrarlayın ve hemoliz araştırın.');
+    }
+    if (level >= 1 && ageH >= 24) {
+      B.push(intensive ? 'Yoğun fototerapi (en az 30 µW/cm²/nm veya çift yönlü/tünel), sürekli uygulanır.' : 'Standart fototerapi başlanır (8–10 µW/cm²/nm, geniş vücut yüzeyi).');
+      B.push('Tedavi kararı TSB ile verilir; direkt bilirubin total bilirubinden çıkarılmaz (TND C3a).');
+    }
+    if (level >= 1) {
+      B.push(monitorText(tsb, level));
+      B.push('Fototerapi etkinliği 4–6 saatte TSB ile değerlendirilir; 2–3 mg/dL’den fazla düşüş beklenir (TND C3b).');
+      B.push('Fototerapide hidrasyon (günlük tartı ve ıslak bez), nötral ısı ve göz koruması sağlanır; ciltte krem/yağ kullanılmaz.');
+    }
+    if (level >= 2) {
+      B.push('Kan değişimi hazırlığı: uygun kan ürünleri (kan bankası), ebeveynleri bilgilendirme, deneyimli ekip (TND C4c).');
+      B.push('TSB, albümin ve B/A oranı değerlendirilir; rutin albümin infüzyonu önerilmez.');
+    }
+    if (level === 3) {
+      B.push('Evden gelen bebekte: yoğun fototerapi ile 2–3 saatte bir TSB; yoğun fototerapiye rağmen 6 saat boyunca sınırın üzerinde kalırsa kan değişimi. Hastanede yatan bebekte yoğun fototerapiye rağmen sınıra ulaşırsa kan değişimi önerilir (TND C4a).');
+      B.push('Akut bilirubin ensefalopatisi bulguları (letarji, hipotoni, emmede azalma, tiz ağlama, opistotonus, retrokollis, nöbet) varsa acil değerlendirme: BİND skoru 7–9 ise acil kan değişimi, 4–6 ise acil girişim (yoğun fototerapi ± kan değişimi).');
+    }
+    if (level >= 2 && i.dct === 'pos' && incompat) {
+      B.push('Coombs (+) Rh/ABO uyuşmazlığında yoğun fototerapiye rağmen TSB yükseliyor veya kan değişimi sınırına 2–3 mg/dL kaldıysa İVİG 0,5–1 g/kg (2 saatte) verilebilir, gerekirse 12 saat sonra tekrarlanır (TND C5b.2).');
+    }
+    if (i.onPT) {
+      var lo = ptThr != null ? ptThr - 3 : null, hi = ptThr != null ? ptThr - 2 : null;
+      if (ptThr != null) {
+        N.push('Fototerapi sonlandırma: TSB, fototerapi başlama sınırının 2–3 mg/dL altına (bu bebek için yaklaşık ' + f1(lo) + '–' + f1(hi) + ' mg/dL) düştüğünde ya da term, risk faktörsüz bebekte 13–14 mg/dL altına indiğinde fototerapi kesilir (TND C3g).');
+        if (tsb <= hi) N.push('Mevcut TSB sonlandırma aralığında veya altında.');
+      }
+      N.push('Fototerapi kesildikten 12–24 saat sonra rebound TSB bakılır (hemoliz, Coombs pozitifliği, gebelik <38 hafta, ilk 3 günde fototerapi alanlarda); bunun için hastanede kalmak gerekmez (TND C3h).');
+    }
+
+    /* ---- uyarılar ---- */
+    if (tcb) {
+      W.push('Transkutan ölçüm (TcB) kullanıldı. TcB fototerapi alan bebeklerde güvenilir değildir; TcB >13 mg/dL, ilk 24 saatte sarılık veya tedavi kararı söz konusuysa TSB ile doğrulayın (TND B2c.3).');
+      if (ptThr != null && tsb >= 0.7 * ptThr) W.push('TcB, fototerapi eşiğinin %70’ine ulaştı: TSB ölçülmelidir (TND B2c.3ii).');
+      else if (ptThr == null && tsb > 0) W.push('24 saatten küçük bebekte sarılık varsa TSB ölçülmelidir.');
+    }
+    if (i.onPT && tcb) W.push('Fototerapi altındaki bebekte TcB kullanılmamalıdır; TSB ile izleyin.');
+    if (rateHemo) W.push('Bilirubin artış hızı ' + f1(rate) + ' mg/dL/saat (>0,2): hemoliz göstergesi (TND C2).');
+    if (rate != null && rate < 0 ) N.push('Önceki ölçüme göre düşüş: ' + f1(rate) + ' mg/dL/saat.');
+    if (hemoSuspect) W.push('Hemoliz olasılığı: Coombs, hemogram/yayma, retikülosit, G6PD; sınıra yaklaşırsa İVİG ve kan değişimi için hazırlık.');
+    if (ageH > 336) W.push('Bebek 14 günden büyük: rehber eğrileri bu yaş için tanımlı değildir. Uzamış sarılıkta direkt/indirekt bilirubin ayrımı yapın ve 5. gün sınırlarını esas alın (TND B2h).');
+    else if (ageH > 168) N.push('7 günden büyük bebekte 5. gün (plato) sınırları kullanılır; uzamış sarılıkta direkt bilirubin ve tiroid fonksiyonlarını değerlendirin (TND B2h).');
+    if (!term35) W.push('Gebelik <35 hafta: bu bebekler yenidoğan yoğun bakım ekibince, fototerapi gücü (15–40 µW/cm²/nm) ve yan etkiler dikkate alınarak izlenmelidir.');
+    if (res.maisels && ageH >= 24) N.push('Karşılaştırma (Maisels 2012, TND <35 hafta şeklinin kaynağı): fototerapi ' + f1(res.maisels.pt[0]) + '–' + f1(res.maisels.pt[1]) + ', kan değişimi ' + f1(res.maisels.ex[0]) + '–' + f1(res.maisels.ex[1]) + ' mg/dL; risk faktörü varsa alt değer kullanılır.');
+    if (res.altScenario) N.push(res.altScenario.label + ': fototerapi eşiği ' + f1(res.altScenario.pt) + ', kan değişimi eşiği ' + f1(res.altScenario.ex) + ' mg/dL.');
+
+    /* ---- albümin / B/A oranı ---- */
+    if (alb != null && alb > 0) {
+      var ba = tsb / alb;
+      res.ba = ba;
+      if (term35) {
+        var ref = baRef(ga, risk);
+        N.push('B/A oranı ' + f1(ba) + ' mg/g (kan değişimi destek kriteri: ≥' + f1(ref) + ' mg/g, TND Tablo 8). Tek başına karar için kullanılmaz.');
+      } else {
+        N.push('B/A oranı ' + f1(ba) + ' mg/g. Preterm için referans doğum ağırlığına göredir (TND Tablo 9); ağırlık girilmediği için karşılaştırılmadı.');
+      }
+    }
+    if (risk) N.push('Dikkate alınan risk faktörleri: ' + risks.join(', ') + '.');
+
+    /* ---- kordon / Rh hemolitik hastalık ---- */
+    var cHb = (i.cordHb !== '' && i.cordHb != null && isFinite(Number(i.cordHb))) ? Number(i.cordHb) : null;
+    var cTb = (i.cordTsb !== '' && i.cordTsb != null && isFinite(Number(i.cordTsb))) ? Number(i.cordTsb) : null;
+    if (cHb != null && cTb != null) {
+      if (cHb < 10 && cTb > 5) W.push('Kordon Hb <10 g/dL ve bilirubin >5 mg/dL: ciddi hemoliz; kan değişimi/parsiyel değişim hazırlığı (TND D1).');
+      else if (cHb >= 10 && cHb <= 13 && rateHigh) W.push('Kordon Hb 10–13 g/dL ile birlikte bilirubin artışı >0,5 mg/dL/saat: kan değişimi gerekir (TND D1).');
+    } else if (cTb != null && ga >= 38 && cTb > 5 && ageH < 24) {
+      W.push('≥38 hafta, kordon bilirubini >5 mg/dL: kan değişimi hazırlığı yapılırken yoğun fototerapi (TND D2).');
+    }
+
+    res.rateText = rate != null ? f1(rate) + ' mg/dL/saat' : null;
+    res.tsbUmol = tsb * 17.1;
+    res.ageText = hoursToText(ageH);
+    return res;
+  }
+
+  var API = { evaluate: evaluate, f1: f1, hoursToText: hoursToText, T5: T5, PT: PT, EX: EX };
+  if (typeof module !== 'undefined' && module.exports) module.exports = API;
+  else root.SarilikCore = API;
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+
+<!-- ======================= ARAYÜZ ======================= -->
+<script id="ui">
+(function () {
+  'use strict';
+  var C = window.SarilikCore, f1 = C.f1;
+  var $ = function (id) { return document.getElementById(id); };
+  var ids = ['ga','birth','sample','tsb','unit','type','onPT','mABO','mRh','bABO','bRh','dct','alb','prevTsb','prevTime','cordHb','cordTsb',
+    'r_isoimmune','r_g6pd','r_asphyxia','r_lethargy','r_temp','r_acidosis','r_sepsis','r_unassessed','r_hemo','r_ph','r_cult','r_apnea','r_hypot','r_vent'];
+  var lastText = '';
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function toLocalInput(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  function dt(v) { if (!v) return null; var d = new Date(v); return isNaN(d.getTime()) ? null : d; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+
+  function gather() {
+    var risks = {};
+    ['isoimmune','g6pd','asphyxia','lethargy','temp','acidosis','sepsis','unassessed','hemo','ph','cult','apnea','hypot','vent'].forEach(function (k) { risks[k] = $('r_' + k).checked; });
+    return {
+      ga: $('ga').value, birth: dt($('birth').value), sample: dt($('sample').value),
+      tsb: $('tsb').value, unit: $('unit').value, type: $('type').value, onPT: $('onPT').checked,
+      mABO: $('mABO').value, mRh: $('mRh').value, bABO: $('bABO').value, bRh: $('bRh').value, dct: $('dct').value,
+      alb: $('alb').value, prevTsb: $('prevTsb').value, prevTime: dt($('prevTime').value),
+      cordHb: $('cordHb').value, cordTsb: $('cordTsb').value, risks: risks
+    };
+  }
+
+  function chartSvg(r) {
+    var W = 640, H = 300, ml = 44, mr = 12, mt = 12, mb = 38;
+    var xmax = 168;
+    var top = Math.max(r.tsb, r.chart.ex.reduce(function (m, p) { return Math.max(m, p[1]); }, 0)) + 3;
+    var ymax = Math.ceil(top / 5) * 5;
+    function X(h) { return ml + (Math.min(h, xmax) / xmax) * (W - ml - mr); }
+    function Y(v) { return mt + (1 - v / ymax) * (H - mt - mb); }
+    function pts(a) { return a.map(function (p) { return X(p[0]).toFixed(1) + ',' + Y(p[1]).toFixed(1); }); }
+    var pt = r.chart.pt, ex = r.chart.ex;
+    var amber = pts(pt).concat(pts(ex.slice().reverse())).join(' ');
+    var redP = pts(ex).concat([X(xmax) + ',' + Y(ymax), X(24) + ',' + Y(ymax)]).join(' ');
+    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Postnatal yaşa göre fototerapi ve kan değişimi eşikleri ile bebeğin bilirubin değeri">';
+    for (var v = 0; v <= ymax; v += 5) {
+      s += '<line x1="' + ml + '" x2="' + (W - mr) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" style="stroke:var(--line)" stroke-width="1"/>';
+      s += '<text x="' + (ml - 6) + '" y="' + (Y(v) + 4) + '" text-anchor="end" font-size="11" style="fill:var(--muted)">' + v + '</text>';
+    }
+    for (var h = 0; h <= xmax; h += 24) {
+      s += '<line x1="' + X(h) + '" x2="' + X(h) + '" y1="' + mt + '" y2="' + (H - mb) + '" style="stroke:var(--line)" stroke-width="1"/>';
+      s += '<text x="' + X(h) + '" y="' + (H - mb + 15) + '" text-anchor="middle" font-size="11" style="fill:var(--muted)">' + h + '</text>';
+    }
+    s += '<polygon points="' + amber + '" fill="#f59e0b" fill-opacity="0.18"/>';
+    s += '<polygon points="' + redP + '" fill="#dc2626" fill-opacity="0.16"/>';
+    s += '<polyline points="' + pts(pt).join(' ') + '" fill="none" stroke="#d97706" stroke-width="2.5"/>';
+    s += '<polyline points="' + pts(ex).join(' ') + '" fill="none" stroke="#dc2626" stroke-width="2.5"/>';
+    s += '<text x="' + (ml + (W - ml - mr) / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="12" style="fill:var(--muted)">Postnatal yaş (saat)</text>';
+    s += '<text transform="translate(12,' + (mt + (H - mt - mb) / 2) + ') rotate(-90)" text-anchor="middle" font-size="12" style="fill:var(--muted)">Bilirubin (mg/dL)</text>';
+    var px = X(r.ageH), py = Y(r.tsb);
+    s += '<circle cx="' + px + '" cy="' + py + '" r="7" fill="#2563eb" stroke="#fff" stroke-width="2"/>';
+    var anchor = r.ageH > 120 ? 'end' : 'start', dx = r.ageH > 120 ? -11 : 11;
+    s += '<text x="' + (px + dx) + '" y="' + (py - 9) + '" text-anchor="' + anchor + '" font-size="12" font-weight="700" style="fill:var(--fg)">' + f1(r.tsb) + '</text>';
+    s += '</svg>';
+    s += '<div class="legend"><span><i style="background:#d97706"></i>Fototerapi eşiği</span><span><i style="background:#dc2626"></i>Kan değişimi eşiği</span><span><i style="background:#2563eb;border-radius:50%"></i>Bu bebek</span></div>';
+    return s;
+  }
+
+  function render() {
+    var gaVal = Number($('ga').value);
+    var pre = $('ga').value !== '' && gaVal < 35;
+    $('risk35').hidden = pre; $('riskPre').hidden = !pre;
+    var r = C.evaluate(gather());
+    var out = $('out');
+    if (!r.ready) {
+      var msg = '';
+      if (r.errors.length) msg += '<p class="badli">' + r.errors.map(esc).join('<br>') + '</p>';
+      if (r.missing.length) msg += '<div class="placeholder">Eksik bilgi: ' + esc(r.missing.join(', ')) + '.</div>';
+      out.innerHTML = msg; $('outBtns').hidden = true; lastText = ''; return;
+    }
+    var cls = r.level === 3 ? 'l3' : r.level === 2 ? 'l2' : r.level === 1 ? 'l1' : 'l0';
+    var h = '';
+    h += '<div class="banner ' + cls + '"><h3>' + esc(r.headline) + '</h3><p>' + esc(r.sub) + '</p></div>';
+    h += '<div class="gp ' + cls + '"><b class="t">Ne yapmalı? · ' + esc(r.gp.t) + '</b><p>' + esc(r.gp.x) + '</p></div>';
+    h += '<div class="metrics">';
+    h += '<div class="metric"><span>Bebeğin yaşı</span><b>' + esc(r.ageText) + '</b></div>';
+    h += '<div class="metric"><span>Bilirubin</span><b>' + f1(r.tsb) + ' mg/dL</b><span>' + f1(r.tsbUmol) + ' µmol/L</span></div>';
+    h += '<div class="metric"><span>Fototerapi eşiği</span><b>' + (r.ptThr != null ? f1(r.ptThr) + ' mg/dL' : 'Tablo yok (&lt;24 s)') + '</b></div>';
+    h += '<div class="metric"><span>Kan değişimi eşiği</span><b>' + (r.exThr != null ? f1(r.exThr) + ' mg/dL' : '—') + '</b></div>';
+    if (r.rateText) h += '<div class="metric"><span>Artış hızı</span><b>' + esc(r.rateText) + '</b></div>';
+    h += '</div>';
+    if (r.warns.length) { h += '<div class="sec">Dikkat</div><ul class="rec">' + r.warns.map(function (x) { return '<li class="warnli">' + esc(x) + '</li>'; }).join('') + '</ul>'; }
+    h += '<div class="sec">Kan grubu değerlendirmesi</div><ul class="rec">' + r.blood.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>';
+    h += '<details class="tech"><summary>Rehbere göre ayrıntılı yaklaşım</summary><ul class="rec">' + r.bullets.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></details>';
+    h += '<details class="tech"><summary>Grafik ve kullanılan eşik (teknik ayrıntı)</summary><p class="note"><b>Kullanılan eşik:</b> ' + esc(r.catLabel) + '. <i>' + esc(r.source) + '.</i></p>' + chartSvg(r) + '</details>';
+    if (r.notes.length) { h += '<details class="tech"><summary>Ek notlar</summary><ul class="rec note">' + r.notes.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></details>'; }
+    out.innerHTML = h; $('outBtns').hidden = false;
+
+    var L = [];
+    L.push('Yenidoğan sarılık değerlendirmesi (TND 2023)');
+    L.push('Gebelik: ' + r.ga + ' hafta | Postnatal yaş: ' + r.ageText);
+    L.push('Bilirubin: ' + f1(r.tsb) + ' mg/dL (' + f1(r.tsbUmol) + ' µmol/L), ' + ($('type').value === 'TcB' ? 'TcB' : 'TSB'));
+    L.push('Fototerapi eşiği: ' + (r.ptThr != null ? f1(r.ptThr) + ' mg/dL' : 'tablo yok (<24 saat)') + ' | Kan değişimi eşiği: ' + (r.exThr != null ? f1(r.exThr) + ' mg/dL' : '—'));
+    L.push('Eğri: ' + r.catLabel);
+    L.push('Sonuç: ' + r.headline + ' – ' + r.sub);
+    L.push('Yönlendirme: ' + r.gp.t + ' – ' + r.gp.x);
+    if (r.risks.length) L.push('Risk faktörleri: ' + r.risks.join(', '));
+    L.push('Kan grubu: ' + r.blood[0]);
+    L.push('Bu özet karar destek aracıyla üretilmiştir; klinik karar hekime aittir.');
+    lastText = L.join('\n');
+  }
+
+  ids.forEach(function (id) { $(id).addEventListener('input', render); $(id).addEventListener('change', render); });
+  $('btnNow').addEventListener('click', function () { $('sample').value = toLocalInput(new Date()); render(); });
+  $('btnExample').addEventListener('click', function () {
+    document.getElementById('f').reset();
+    var now = new Date(), birth = new Date(now.getTime() - 52 * 36e5);
+    $('ga').value = '38'; $('birth').value = toLocalInput(birth); $('sample').value = toLocalInput(now);
+    $('tsb').value = '16.2'; $('mABO').value = 'O'; $('mRh').value = '+'; $('bABO').value = 'A'; $('bRh').value = '+';
+    render();
+  });
+  $('btnReset').addEventListener('click', function () {
+    document.getElementById('f').reset(); render();
+  });
+  $('btnPrint').addEventListener('click', function () { window.print(); });
+  $('btnCopy').addEventListener('click', function () {
+    var b = $('btnCopy');
+    function ok() { var t = b.textContent; b.textContent = 'Kopyalandı'; setTimeout(function () { b.textContent = t; }, 1500); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(lastText).then(ok, function () { window.prompt('Kopyalayın:', lastText); });
+    else window.prompt('Kopyalayın:', lastText);
+  });
+  render();
+})();
+</script>
+</body>
+</html>
